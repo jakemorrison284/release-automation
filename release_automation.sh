@@ -1,52 +1,75 @@
 #!/bin/bash
+
 # Enhanced script to automate the release process
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-# Load configuration
-source config.env
+# Load configuration from versioning.yml (you may need a YAML parser for this)
+VERSION_FILE="versioning.yml"
+CURRENT_VERSION=$(grep 'version:' $VERSION_FILE | awk '{print $2}')
+VERSION_TYPE=$1  # Argument to specify the type of version increment (major, minor, patch)
+EMAIL_RECIPIENTS=("dev-team@example.com" "qa-team@example.com")  # Recipients from versioning.yml
 
-# Default values
-VERSION="$(date +%Y%m%d%H%M%S)"
-BUILD_TYPE="npm"
-LOGFILE="release.log"
+# Function to increment version based on type
+increment_version() {
+    local version=$1
+    local type=$2
+    IFS='.' read -r major minor patch <<< "$version"
 
-# Parse command-line arguments
-while [[ "$#" -gt 0 ]]; do
-    case $1 in
-        --version) VERSION="$2"; shift ;;  
-        --build-type) BUILD_TYPE="$2"; shift ;;  
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;  
+    case $type in
+        major)
+            ((major++))
+            minor=0
+            patch=0
+            ;; 
+        minor)
+            ((minor++))
+            patch=0
+            ;;
+        patch)
+            ((patch++))
+            ;;
+        *)
+            echo "Invalid version type. Use major, minor, or patch."
+            exit 1
+            ;;
     esac
-    shift
-done
 
-# Logging function
-log() {
-    echo "$(date +%Y-%m-%d %H:%M:%S) - $1" | tee -a $LOGFILE
+    echo "$major.$minor.$patch"
 }
 
-# Build the release
-log "Starting the build process for version $VERSION..."
+# Function to generate a changelog
+generate_changelog() {
+    git log --oneline $(git describe --tags --abbrev=0)..HEAD > CHANGELOG.md
+}
 
-# Build steps based on build type
-case $BUILD_TYPE in
-    npm) npm run build || log "Error: npm build failed!" ;;  
-    make) make build || log "Error: make build failed!" ;;  
-    *) log "Unknown build type: $BUILD_TYPE"; exit 1 ;;  
-esac
+# Function to create a new Git tag
+create_tag() {
+    local new_version=$1
+    git tag "v$new_version"
+    git push origin "v$new_version"
+}
 
-log "Build for version $VERSION completed successfully!"
+# Function to send email notifications
+send_notifications() {
+    local version=$1
+    local subject="New Release: v$version"
+    local message="A new version v$version has been released. Please check the changelog for details."
+    
+    for recipient in "${EMAIL_RECIPIENTS[@]}"; do
+        echo "$message" | mail -s "$subject" "$recipient"
+    done
+}
 
-# Deployment steps (placeholder)
-log "Deploying version $VERSION..."
-# Replace with actual deployment command
-# deploy_command || log "Deployment failed!"
+# Main script execution
+if [ -z "$VERSION_TYPE" ]; then
+    echo "Please specify the version type (major, minor, patch)."
+    exit 1
+fi
 
-# Notify team (placeholder)
-# notify_team "Build for version $VERSION completed successfully!"
+NEW_VERSION=$(increment_version "$CURRENT_VERSION" "$VERSION_TYPE")
+generate_changelog
+create_tag "$NEW_VERSION"
+send_notifications "$NEW_VERSION"
 
-# Tagging the release
-log "Tagging the release..."
-git tag -a "v$VERSION" -m "Release version $VERSION"
-git push origin "v$VERSION"
+echo "Release process complete. New version: v$NEW_VERSION"
