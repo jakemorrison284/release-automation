@@ -1,0 +1,10 @@
+version: '1.0'
+
+versioning:
+  type: semantic
+  strategy: auto
+  notify:
+    type: email
+    recipients:
+      - dev-team@example.com
+      - qa-team@example.com
