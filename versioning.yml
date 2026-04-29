@@ -1,10 +1,11 @@
 version: '1.0'
 
 versioning:
-  type: semantic
-  strategy: auto
+  type: semantic  # Follow semantic versioning principles (MAJOR.MINOR.PATCH)
+  strategy: auto  # Ensure this is well-defined in documentation
   notify:
-    type: email
+    type: email  # Consider using collaboration tools for notifications
     recipients:
-      - dev-team@example.com
-      - qa-team@example.com
+      - dev-team@example.com  # Verify validity
+      - qa-team@example.com  # Verify validity
+      - additional-team@example.com  # Add any additional teams if necessary
