@@ -1,0 +1,39 @@
+# Monitoring configuration for restore_postgres.sh alerts
+
+alerts:
+  - alert: RestorePostgresFailure
+    expr: increase(restore_postgres_failure_total[5m]) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "PostgreSQL Restore Failure Detected"
+      description: "Restore operation failed in the last 5 minutes. Check restore logs for details."
+
+  - alert: RestorePostgresBackupIssue
+    expr: increase(restore_postgres_backup_issue_total[5m]) > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Restore Backup File Issue"
+      description: "Issues detected with PostgreSQL restore backup files. Immediate attention recommended."
+
+  - alert: RestorePostgresNotificationError
+    expr: increase(restore_postgres_notification_error_total[5m]) > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Notification Script Error during Restore"
+      description: "Error encountered in notification script during PostgreSQL restore. Check notification script and logs."
+
+  - alert: RestorePostgresDryRunInfo
+    expr: increase(restore_postgres_dry_run_total[5m]) > 0
+    for: 1m
+    labels:
+      severity: info
+    annotations:
+      summary: "Restore Dry-Run Executed"
+      description: "A dry-run of PostgreSQL restore was executed. No changes applied.
+      This alert is informational only.",
