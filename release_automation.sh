@@ -1,5 +1,6 @@
 #!/bin/bash
 # Script to automate the release process with build, test, lint, and error notifications
+# Enhanced with extended notification channels and parallel execution
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
@@ -16,7 +17,7 @@ usage() {
     echo "Usage: $0 [-v version] [-e email] [-c notify_channel] [-l logfile] [-q]"
     echo "  -v version           Specify version (default: timestamp)"
     echo "  -e email             Email address for notifications"
-    echo "  -c notify_channel    Notification channel: email, slack, sms"
+    echo "  -c notify_channel    Notification channel: email, slack, sms, teams, pagerduty"
     echo "  -l logfile           Log file path (default: release.log)"
     echo "  -q                   Quiet mode (no output except errors)"
     exit 1
@@ -47,34 +48,46 @@ log() {
     fi
 }
 
-# Notification function
+# Notification function with extended channels
 notify_error() {
     local message="$1"
     log "ERROR" "$message"
     case $NOTIFY_CHANNEL in
         email)
-            # Send email notification on error (requires mailutils or similar configured)
             echo "$message" | mail -s "Release Automation Error - Version $VERSION" "$EMAIL_NOTIFICATION"
             ;;
         slack)
-            # Slack notification (requires webhook URL in environment variable SLACK_WEBHOOK_URL)
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
                 log "ERROR" "Slack webhook URL not set. Cannot send Slack notification."
             else
                 payload="{\"text\":\"Release Automation Error - Version $VERSION: $message\"}"
-                curl -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
+                curl -s -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
             fi
             ;;
         sms)
-            # SMS notification (requires SMS API credentials set in environment variables)
             if [ -z "$SMS_API_URL" ] || [ -z "$SMS_API_KEY" ] || [ -z "$SMS_RECIPIENT" ]; then
                 log "ERROR" "SMS API credentials or recipient not set. Cannot send SMS notification."
             else
-                # Example curl command for SMS API (customize as needed)
-                curl -X POST "$SMS_API_URL" \
+                curl -s -X POST "$SMS_API_URL" \
                      -H "Authorization: Bearer $SMS_API_KEY" \
                      -H 'Content-Type: application/json' \
                      -d '{"to":"'$SMS_RECIPIENT'","message":"Release Automation Error - Version $VERSION: $message"}'
+            fi
+            ;;
+        teams)
+            if [ -z "$TEAMS_WEBHOOK_URL" ]; then
+                log "ERROR" "Microsoft Teams webhook URL not set. Cannot send Teams notification."
+            else
+                payload="{\"text\":\"Release Automation Error - Version $VERSION: $message\"}"
+                curl -s -X POST -H 'Content-type: application/json' --data "$payload" "$TEAMS_WEBHOOK_URL"
+            fi
+            ;;
+        pagerduty)
+            if [ -z "$PAGERDUTY_ROUTING_KEY" ]; then
+                log "ERROR" "PagerDuty routing key not set. Cannot send PagerDuty notification."
+            else
+                payload="{\"routing_key\":\"$PAGERDUTY_ROUTING_KEY\",\"event_action\":\"trigger\",\"payload\":{\"summary\":\"Release Automation Error - Version $VERSION: $message\",\"source\":\"release_automation.sh\",\"severity\":\"error\"}}"
+                curl -s -X POST -H 'Content-Type: application/json' --data "$payload" https://events.pagerduty.com/v2/enqueue
             fi
             ;;
         *)
@@ -96,30 +109,44 @@ error_handler() {
 # Trap errors to send notification
 trap error_handler ERR
 
-log "INFO" "Starting the build process for version $VERSION..."
+log "INFO" "Starting the build, lint, and test process for version $VERSION..."
 
-# Build commands (example using make)
-if ! make build; then
-    notify_error "Build failed!"
-    exit 1
-fi
+# Run build, lint, and test in parallel
+run_build() {
+    if ! make build; then
+        notify_error "Build failed!"
+        exit 1
+    fi
+    log "INFO" "Build completed successfully."
+}
 
-log "INFO" "Build completed successfully."
+run_lint() {
+    if ! make lint; then
+        notify_error "Linting failed!"
+        exit 1
+    fi
+    log "INFO" "Linting completed successfully."
+}
 
-# Run linting
-log "INFO" "Starting linting..."
-if ! make lint; then
-    notify_error "Linting failed!"
-    exit 1
-fi
-log "INFO" "Linting completed successfully."
+run_test() {
+    if ! make test; then
+        notify_error "Tests failed!"
+        exit 1
+    fi
+    log "INFO" "Tests completed successfully."
+}
 
-# Run tests
-log "INFO" "Starting tests..."
-if ! make test; then
-    notify_error "Tests failed!"
-    exit 1
-fi
-log "INFO" "Tests completed successfully."
+# Execute all in background and wait for completion
+run_build &
+PID_BUILD=$!
+run_lint &
+PID_LINT=$!
+run_test &
+PID_TEST=$!
+
+# Wait and check each
+wait $PID_BUILD || exit 1
+wait $PID_LINT || exit 1
+wait $PID_TEST || exit 1
 
 log "INFO" "Release process for version $VERSION completed successfully!"
