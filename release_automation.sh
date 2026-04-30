@@ -1,75 +1,65 @@
 #!/bin/bash
-
-# Enhanced script to automate the release process
+# Enhanced script to automate the release process with build, test, lint, caching, parallelization, and multi-channel error notifications
 
 set -e  # Exit immediately if a command exits with a non-zero status
+set -o pipefail  # Catch errors in piped commands
 
-# Load configuration from versioning.yml (you may need a YAML parser for this)
-VERSION_FILE="versioning.yml"
-CURRENT_VERSION=$(grep 'version:' $VERSION_FILE | awk '{print $2}')
-VERSION_TYPE=$1  # Argument to specify the type of version increment (major, minor, patch)
-EMAIL_RECIPIENTS=("dev-team@example.com" "qa-team@example.com")  # Recipients from versioning.yml
+# Define variables
+VERSION="$(date +%Y%m%d%H%M%S)"
+LOGFILE="release.log"
+EMAIL_NOTIFICATION="youremail@example.com"  # Set your notification email here
+SLACK_WEBHOOK_URL="https://hooks.slack.com/services/your/slack/webhook"  # Set your Slack webhook URL here
 
-# Function to increment version based on type
-increment_version() {
-    local version=$1
-    local type=$2
-    IFS='.' read -r major minor patch <<< "$version"
-
-    case $type in
-        major)
-            ((major++))
-            minor=0
-            patch=0
-            ;; 
-        minor)
-            ((minor++))
-            patch=0
-            ;;
-        patch)
-            ((patch++))
-            ;;
-        *)
-            echo "Invalid version type. Use major, minor, or patch."
-            exit 1
-            ;;
-    esac
-
-    echo "$major.$minor.$patch"
+# Logging function
+log() {
+    echo "$(date +%Y-%m-%d %H:%M:%S) - $1" | tee -a $LOGFILE
 }
 
-# Function to generate a changelog
-generate_changelog() {
-    git log --oneline $(git describe --tags --abbrev=0)..HEAD > CHANGELOG.md
+# Error notification functions
+notify_error_email() {
+    local message="$1"
+    echo "$message" | mail -s "Release Automation Error - Version $VERSION" $EMAIL_NOTIFICATION
 }
 
-# Function to create a new Git tag
-create_tag() {
-    local new_version=$1
-    git tag "v$new_version"
-    git push origin "v$new_version"
+notify_error_slack() {
+    local message="$1"
+    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" $SLACK_WEBHOOK_URL
 }
 
-# Function to send email notifications
-send_notifications() {
-    local version=$1
-    local subject="New Release: v$version"
-    local message="A new version v$version has been released. Please check the changelog for details."
-    
-    for recipient in "${EMAIL_RECIPIENTS[@]}"; do
-        echo "$message" | mail -s "$subject" "$recipient"
-    done
+notify_error() {
+    local message="$1"
+    log "ERROR: $message"
+    notify_error_email "$message"
+    notify_error_slack "$message"
 }
 
-# Main script execution
-if [ -z "$VERSION_TYPE" ]; then
-    echo "Please specify the version type (major, minor, patch)."
+# Trap errors to send notification
+trap 'notify_error "Release process failed at line $LINENO."' ERR
+
+log "Starting the enhanced build process for version $VERSION..."
+
+# Build commands with caching and parallelization example (adjust as per your build tool)
+log "Running build steps..."
+if ! make clean && make build -j$(nproc); then
+    notify_error "Build failed!"
     exit 1
 fi
+log "Build completed successfully."
 
-NEW_VERSION=$(increment_version "$CURRENT_VERSION" "$VERSION_TYPE")
-generate_changelog
-create_tag "$NEW_VERSION"
-send_notifications "$NEW_VERSION"
+# Run linting with fail-fast
+log "Starting linting..."
+if ! make lint; then
+    notify_error "Linting failed!"
+    exit 1
+fi
+log "Linting completed successfully."
 
-echo "Release process complete. New version: v$NEW_VERSION"
+# Run tests in parallel and generate coverage report
+log "Starting tests..."
+if ! make test-parallel && make coverage-report; then
+    notify_error "Tests failed!"
+    exit 1
+fi
+log "Tests completed successfully."
+
+log "Release process for version $VERSION completed successfully!"
