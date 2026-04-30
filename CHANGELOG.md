@@ -10,8 +10,16 @@
 - Updated release_automation.sh to dynamically read email recipients from versioning.yml.
 - Enhanced release-automation scripts with recent improvements documented in README.md.
 
-## Documentation
-- Finalized changelog for the upcoming release in README.md.
-- Updated changelog section in README.md with recent commit details for the upcoming release.
+## Release 1.2
+
+### Added
+- Added release process automation section to README
+
+### Changed
+- Updated changelog section in README.md with recent commits for upcoming release
+
+### Documentation
+- Finalized changelog for upcoming release in README.md
+- Updated changelog section in README.md with recent commit details for upcoming release
 
 *This changelog was generated based on recent commit messages.*
