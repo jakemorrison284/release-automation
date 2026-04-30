@@ -16,7 +16,7 @@ usage() {
     echo "Usage: $0 [-v version] [-e email] [-c notify_channel] [-l logfile] [-q]"
     echo "  -v version           Specify version (default: timestamp)"
     echo "  -e email             Email address for notifications"
-    echo "  -c notify_channel    Notification channel: email, slack"
+    echo "  -c notify_channel    Notification channel: email, slack, sms"
     echo "  -l logfile           Log file path (default: release.log)"
     echo "  -q                   Quiet mode (no output except errors)"
     exit 1
@@ -57,12 +57,24 @@ notify_error() {
             echo "$message" | mail -s "Release Automation Error - Version $VERSION" "$EMAIL_NOTIFICATION"
             ;;
         slack)
-            # Placeholder for Slack notification (requires webhook URL in environment variable SLACK_WEBHOOK_URL)
+            # Slack notification (requires webhook URL in environment variable SLACK_WEBHOOK_URL)
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
                 log "ERROR" "Slack webhook URL not set. Cannot send Slack notification."
             else
                 payload="{\"text\":\"Release Automation Error - Version $VERSION: $message\"}"
                 curl -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
+            fi
+            ;;
+        sms)
+            # SMS notification (requires SMS API credentials set in environment variables)
+            if [ -z "$SMS_API_URL" ] || [ -z "$SMS_API_KEY" ] || [ -z "$SMS_RECIPIENT" ]; then
+                log "ERROR" "SMS API credentials or recipient not set. Cannot send SMS notification."
+            else
+                # Example curl command for SMS API (customize as needed)
+                curl -X POST "$SMS_API_URL" \
+                     -H "Authorization: Bearer $SMS_API_KEY" \
+                     -H 'Content-Type: application/json' \
+                     -d '{"to":"'$SMS_RECIPIENT'","message":"Release Automation Error - Version $VERSION: $message"}'
             fi
             ;;
         *)
