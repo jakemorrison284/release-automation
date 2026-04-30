@@ -4,11 +4,13 @@
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-# Load configuration from versioning.yml (you may need a YAML parser for this)
+# Load configuration from versioning.yml
 VERSION_FILE="versioning.yml"
-CURRENT_VERSION=$(grep 'version:' $VERSION_FILE | awk '{print $2}')
+CURRENT_VERSION=$(grep '^version:' $VERSION_FILE | awk '{print $2}')
 VERSION_TYPE=$1  # Argument to specify the type of version increment (major, minor, patch)
-EMAIL_RECIPIENTS=("dev-team@example.com" "qa-team@example.com")  # Recipients from versioning.yml
+
+# Dynamically read email recipients from versioning.yml
+EMAIL_RECIPIENTS=($(awk '/recipients:/,/-/ {if ($0 ~ /-/) print $2}' $VERSION_FILE))
 
 # Function to increment version based on type
 increment_version() {
