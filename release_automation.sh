@@ -1,5 +1,5 @@
 #!/bin/bash
-# Enhanced script to automate the release process
+# Enhanced script to automate the release process with robustness and flexibility improvements
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
@@ -7,46 +7,84 @@ set -e  # Exit immediately if a command exits with a non-zero status
 source config.env
 
 # Default values
-VERSION="$(date +%Y%m%d%H%M%S)"
-BUILD_TYPE="npm"
+VERSION_TYPE="$1"
 LOGFILE="release.log"
-
-# Parse command-line arguments
-while [[ "$#" -gt 0 ]]; do
-    case $1 in
-        --version) VERSION="$2"; shift ;;  
-        --build-type) BUILD_TYPE="$2"; shift ;;  
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;  
-    esac
-    shift
-done
+EMAIL_RECIPIENTS=("dev-team@example.com" "qa-team@example.com")
 
 # Logging function
 log() {
     echo "$(date +%Y-%m-%d %H:%M:%S) - $1" | tee -a $LOGFILE
 }
 
-# Build the release
-log "Starting the build process for version $VERSION..."
+# Error handling function
+handle_error() {
+    log "Error occurred: $1"
+    exit 1
+}
 
-# Build steps based on build type
-case $BUILD_TYPE in
-    npm) npm run build || log "Error: npm build failed!" ;;  
-    make) make build || log "Error: make build failed!" ;;  
-    *) log "Unknown build type: $BUILD_TYPE"; exit 1 ;;  
-esac
+trap 'handle_error "Script interrupted."' INT TERM
 
-log "Build for version $VERSION completed successfully!"
+# Validate version type argument
+if [ -z "$VERSION_TYPE" ]; then
+    log "Please specify the version type (major, minor, patch)."
+    exit 1
+fi
 
-# Deployment steps (placeholder)
-log "Deploying version $VERSION..."
-# Replace with actual deployment command
-# deploy_command || log "Deployment failed!"
+# Function to increment version from versioning.yml using yq (YAML processor)
+increment_version() {
+    if ! command -v yq &> /dev/null; then
+        handle_error "yq command not found, please install yq to parse YAML files."
+    fi
+    local current_version=$(yq e '.version' versioning.yml)
+    local type="$1"
+    IFS='.' read -r major minor patch <<< "$current_version"
 
-# Notify team (placeholder)
-# notify_team "Build for version $VERSION completed successfully!"
+    case $type in
+        major)
+            ((major++))
+            minor=0
+            patch=0
+            ;; 
+        minor)
+            ((minor++))
+            patch=0
+            ;;
+        patch)
+            ((patch++))
+            ;;
+        *)
+            handle_error "Invalid version type. Use major, minor, or patch."
+            ;;
+    esac
+    echo "$major.$minor.$patch"
+}
 
-# Tagging the release
-log "Tagging the release..."
-git tag -a "v$VERSION" -m "Release version $VERSION"
-git push origin "v$VERSION"
+# Function to generate changelog
+generate_changelog() {
+    git log --oneline $(git describe --tags --abbrev=0)..HEAD > CHANGELOG.md
+}
+
+# Function to create and push git tag
+create_tag() {
+    local new_version=$1
+    git tag "v$new_version" || handle_error "Failed to create git tag."
+    git push origin "v$new_version" || handle_error "Failed to push git tag."
+}
+
+# Function to send email notifications
+send_notifications() {
+    local version=$1
+    local subject="New Release: v$version"
+    local message="A new version v$version has been released. Please check the changelog for details."
+    for recipient in "${EMAIL_RECIPIENTS[@]}"; do
+        echo "$message" | mail -s "$subject" "$recipient" || log "Warning: Failed to send email to $recipient"
+    done
+}
+
+# Main script execution
+NEW_VERSION=$(increment_version "$VERSION_TYPE")
+generate_changelog
+create_tag "$NEW_VERSION"
+send_notifications "$NEW_VERSION"
+
+log "Release process complete. New version: v$NEW_VERSION"
