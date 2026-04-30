@@ -73,10 +73,12 @@ These updated steps aim to improve deployment reliability and operational awaren
 - Integrated updated PostgreSQL restore deployment steps based on alerting rules into documentation.
 - Added monitoring configurations for restore_postgres.sh alerting enhancements.
 - Improved clarity and completeness of restore_postgres_runbook.md.
+- Enhanced release process script to automate semantic versioning, changelog generation, git tagging, and email notifications.
 
 ## Impact
 - Enhanced alerting system efficiency and reduced alert fatigue.
 - Improved deployment reliability with integrated monitoring and alerting.
+- Streamlined release process automation with dynamic notifications and version control.
 - Better documentation for restore procedures and incident management.
 
 ## Next Steps
