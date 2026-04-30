@@ -97,3 +97,39 @@ These updated steps aim to improve deployment reliability and operational awaren
 5. Monitor alert performance and deployment outcomes continuously.
 6. Adjust configurations and procedures based on monitoring data as required.
 7. Document any further changes or observations in the changelog.
+
+---
+
+# Release Process Automation
+
+This repository includes a release automation script `release_automation.sh` that streamlines the release process by automating version incrementing, changelog generation, git tagging, and email notifications.
+
+## Prerequisites
+- Ensure `git` is installed and configured.
+- Ensure the `mail` command is available and configured for sending email notifications.
+- Verify the `versioning.yml` file contains the current version and email recipients for notifications.
+
+## Usage
+To run the release automation script, execute:
+
+```bash
+./release_automation.sh <version_type>
+```
+
+Where `<version_type>` is one of:
+- `major` for major version increment
+- `minor` for minor version increment
+- `patch` for patch version increment
+
+The script will:
+1. Increment the version based on the specified type.
+2. Generate a changelog from git commits since the last tag.
+3. Create and push a new git tag with the updated version.
+4. Send email notifications to the recipients listed in `versioning.yml`.
+
+## Considerations
+- The script exits if no or invalid version type is provided.
+- Email notifications rely on the `mail` command being properly configured.
+- Ensure you have push access to the git repository for tagging.
+
+For more details, refer to the `release_automation.sh` script and `versioning.yml` configuration file.
