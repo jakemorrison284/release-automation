@@ -1,16 +1,6 @@
-version: '1.2'
-
-versioning:
-  type: semantic  # Follow semantic versioning principles (MAJOR.MINOR.PATCH)
-  strategy: auto  # Ensure this is well-defined in documentation
-  # Increment Guidelines:
-  # MAJOR version when making incompatible API changes,
-  # MINOR version when adding functionality in a backwards-compatible manner,
-  # PATCH version when making backwards-compatible bug fixes.
-  notify:
-    type: email  # Consider using collaboration tools for notifications
-    recipients:
-      - dev-team@example.com  # Verify validity
-      - qa-team@example.com  # Verify validity
-      - additional-team@example.com  # Add any additional teams if necessary
-      - product-team@example.com  # Consider adding product team
+version: 1.2
+recipients:
+  - lucas.mueller@example.com
+  - team@example.com
+canary: true
+version_type: patch
