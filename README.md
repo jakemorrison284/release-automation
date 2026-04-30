@@ -83,3 +83,15 @@ These updated steps aim to improve deployment reliability and operational awaren
 - Monitor alert performance and deployment outcomes.
 - Adjust configurations and procedures as needed based on monitoring data.
 - Continue documenting any further changes in this changelog.
+
+---
+
+# Release Preparation Checklist
+
+1. Validate PostgreSQL backup files integrity and accessibility before deployment.
+2. Perform dry-run restore to validate restore process without applying changes; confirm dry-run success.
+3. Verify no restore failures occurred post-restore; halt deployment and initiate incident response if failure detected.
+4. Ensure notification scripts for restore status are functioning correctly; implement manual fallback if needed.
+5. Monitor alert performance and deployment outcomes continuously.
+6. Adjust configurations and procedures based on monitoring data as required.
+7. Document any further changes or observations in the changelog.
