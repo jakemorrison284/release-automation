@@ -63,3 +63,23 @@ This document outlines updated deployment steps to integrate monitoring and aler
 ## Summary
 
 These updated steps aim to improve deployment reliability and operational awareness by leveraging alerting rules. Incorporating validation, verification, and fallback mechanisms supports proactive incident management and minimizes deployment risk.
+
+---
+
+# Changelog for Upcoming Release
+
+## Recent Changes
+- Updated `release_automation.sh` to dynamically read email recipients from `versioning.yml`.
+- Integrated updated PostgreSQL restore deployment steps based on alerting rules into documentation.
+- Added monitoring configurations for restore_postgres.sh alerting enhancements.
+- Improved clarity and completeness of restore_postgres_runbook.md.
+
+## Impact
+- Enhanced alerting system efficiency and reduced alert fatigue.
+- Improved deployment reliability with integrated monitoring and alerting.
+- Better documentation for restore procedures and incident management.
+
+## Next Steps
+- Monitor alert performance and deployment outcomes.
+- Adjust configurations and procedures as needed based on monitoring data.
+- Continue documenting any further changes in this changelog.
