@@ -1,4 +1,4 @@
-# Changelog for Release 1.1
+# Changelog for Release 1.2
 
 ## Added
 - Added release process automation section to README.
@@ -6,7 +6,7 @@
 - Added explicit changelog section for the upcoming release in README.md.
 
 ## Changed
-- Updated version to 1.1 in versioning.yml.
+- Updated version to 1.2 in versioning.yml.
 - Updated release_automation.sh to dynamically read email recipients from versioning.yml.
 - Enhanced release-automation scripts with recent improvements documented in README.md.
 
