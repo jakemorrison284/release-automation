@@ -1,1 +1,6 @@
 version: 1.2
+recipients:
+  - lucas.mueller@example.com
+  - team@example.com
+canary: true
+version_type: patch
