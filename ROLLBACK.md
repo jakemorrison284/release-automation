@@ -1,7 +1,3 @@
-# Rollback Changes
+# Rollback to commit 60ddfe992285
 
-This rollback reverts the changes made in commit 5ae510ee.
-
-## Changes Reverted
-- Document updates for HighPaymentErrorRate alert runbook.
-
+This commit reverts changes made in the commit 60ddfe992285 to address misconfigurations.
