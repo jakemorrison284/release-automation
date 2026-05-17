@@ -1,6 +1,6 @@
-# Release v1.0.2
+# Release v3.0.2
 
-This release includes bug fixes and performance improvements.
+- Description of changes for this release.
 
 - Fixed issue with release tagging.
 - Improved error handling in automation scripts.
