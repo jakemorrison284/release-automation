@@ -1,0 +1,3 @@
+# Release v1.0.0
+
+This is the initial release of the release-automation project.
