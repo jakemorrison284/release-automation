@@ -1,7 +1,7 @@
-# Release v1.0.0
+# Release v1.0.2
 
-This is the initial release of the release-automation project.
+This release includes bug fixes and performance improvements.
 
-- Added core features for release automation.
-- Improved CI/CD integration.
-- Documentation updates.
+- Fixed issue with release tagging.
+- Improved error handling in automation scripts.
+- Updated documentation for clarity.
