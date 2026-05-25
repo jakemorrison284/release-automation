@@ -1,6 +1,6 @@
-# Release v3.1.1
+# Release v3.0.2
 
-This is the release notes for version 3.1.1.
+This is the release notes for version 3.0.2.
 
 - Description of changes for this release.
 - Added new features.
