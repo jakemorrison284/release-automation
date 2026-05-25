@@ -8,3 +8,4 @@ This is the release notes for version 3.1.1.
 - Updated dependencies.
 - Minor adjustments for clarity.
 - Additional notes for clarity.
+- Final adjustments before release.
