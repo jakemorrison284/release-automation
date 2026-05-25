@@ -1,3 +1,3 @@
-# Rollback to commit 60ddfe992285
+# Rollback changes from commit 77f83f832d6376137de0c92807a20c81982c31e5
 
-This commit reverts changes made in the commit 60ddfe992285 to address misconfigurations.
+This commit reverts the changes made in the specified commit.
