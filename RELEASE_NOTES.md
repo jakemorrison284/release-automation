@@ -7,3 +7,4 @@ This is the release notes for version 3.1.1.
 - Fixed bugs from previous versions.
 - Updated dependencies.
 - Minor adjustments for clarity.
+- Additional notes for clarity.
